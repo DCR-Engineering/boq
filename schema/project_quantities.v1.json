@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dcr.bh/schema/project_quantities.v1.json",
+  "title": "Project Quantities v1",
+  "description": "Canonical contract between extraction and reporting. Every quantity is traceable to a source region or it is not emitted.",
+  "type": "object",
+  "required": ["schema_version", "project", "extraction", "items"],
+  "additionalProperties": false,
+
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+
+    "project": {
+      "type": "object",
+      "required": ["project_no", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "project_no": { "type": "string", "description": "Normalised project number, e.g. DCR2564" },
+        "project_no_variants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Every rendering found across the document sets. More than one is expected; a mismatch raises cross-check project_id_consistency."
+        },
+        "title": { "type": "string" },
+        "client": { "type": "string" },
+        "location": { "type": "string" },
+        "zoning": { "type": "string" },
+        "permit_refs": { "type": "array", "items": { "type": "string" } },
+        "architect": { "type": "string" },
+        "structural_engineer": { "type": "string" },
+        "drawing_date": { "type": "string" },
+        "storey_heights_m": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "exclusiveMinimum": 0 },
+          "description": "Level name -> clear height. Sourced from Set C where Set B omits it; the source is recorded on the items that use it."
+        }
+      }
+    },
+
+    "extraction": {
+      "type": "object",
+      "required": ["extracted_at", "tool_version", "source_files"],
+      "additionalProperties": false,
+      "properties": {
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "tool_version": { "type": "string" },
+        "rate_library_version": { "type": ["string", "null"] },
+        "factors_version": { "type": ["string", "null"] },
+        "review_status": { "enum": ["draft", "in_review", "approved", "rejected"] },
+        "source_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["file", "sha256", "set", "file_type"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "set": { "enum": ["A", "B", "C", "supporting"] },
+              "file_type": { "enum": ["pdf", "xlsx", "dwf", "dxf", "image"] },
+              "pages": { "type": ["integer", "null"], "minimum": 0 },
+              "has_text_layer": { "type": ["boolean", "null"] }
+            }
+          }
+        },
+        "model_calls": {
+          "type": "array",
+          "description": "Guardrail 11.5 - every model call logged with prompt, page reference and cost.",
+          "items": {
+            "type": "object",
+            "required": ["call_id", "purpose", "model", "source_ref", "cost_usd"],
+            "additionalProperties": false,
+            "properties": {
+              "call_id": { "type": "string" },
+              "purpose": { "type": "string" },
+              "model": { "type": "string" },
+              "prompt_ref": { "type": "string" },
+              "source_ref": { "$ref": "#/$defs/source" },
+              "input_tokens": { "type": "integer", "minimum": 0 },
+              "output_tokens": { "type": "integer", "minimum": 0 },
+              "cost_usd": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    },
+
+    "cross_checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/cross_check" }
+    }
+  },
+
+  "$defs": {
+
+    "source": {
+      "type": "object",
+      "description": "Where this value physically came from. Guardrail 11.1: no number without a source.",
+      "required": ["file"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string" },
+        "file_type": { "enum": ["pdf", "xlsx", "dwf", "dxf", "image"] },
+        "page": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "1-based page index. This, with file, is the extraction key - sheet numbers are not unique."
+        },
+        "sheet": {
+          "type": ["string", "null"],
+          "description": "Sheet number as printed (e.g. 'ST - 05') or worksheet name (e.g. 'Main'). Non-unique; attribute only."
+        },
+        "region": { "type": ["string", "null"], "description": "Human label, e.g. 'footing schedule'" },
+        "bbox": {
+          "type": ["array", "null"],
+          "items": { "type": "number" },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x0, y0, x1, y1] in PDF points. Required for pdf sources."
+        },
+        "cell": {
+          "type": ["string", "null"],
+          "description": "Spreadsheet cell or range, e.g. 'B18:C18'. Required for xlsx sources."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "file_type": { "const": "pdf" } }, "required": ["file_type"] },
+          "then": { "required": ["page", "bbox"] }
+        },
+        {
+          "if": { "properties": { "file_type": { "const": "xlsx" } }, "required": ["file_type"] },
+          "then": { "required": ["sheet", "cell"] }
+        }
+      ]
+    },
+
+    "item": {
+      "type": "object",
+      "required": ["id", "discipline", "element", "quantity", "unit", "method", "source", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(\\.[A-Za-z0-9_-]+)+$",
+          "description": "Dotted stable id, e.g. conc.footing.SF2 or glaz.window.W17"
+        },
+        "discipline": { "enum": ["structural", "architectural", "thermal", "mep", "general"] },
+        "trade": {
+          "enum": ["substructure", "superstructure_concrete", "reinforcement", "blockwork",
+                   "finishes", "doors_windows", "thermal", "plumbing", "drainage", "electrical"],
+          "description": "Drives the BoQ sheet this item lands on."
+        },
+        "element": { "type": "string", "description": "e.g. 'isolated footing', 'strip footing', 'column'" },
+        "mark": { "type": ["string", "null"], "description": "Schedule mark, e.g. 'SF2', 'C1', 'W17'" },
+        "level": { "type": ["string", "null"], "description": "e.g. 'foundation', 'ground', 'first', 'roof'" },
+        "elevation": { "enum": ["front", "rear", "left", "right", null], "description": "For envelope items" },
+
+        "quantity": {
+          "type": ["number", "null"],
+          "description": "null is a valid, expected outcome. It requires null_reason."
+        },
+        "unit": { "enum": ["m", "m2", "m3", "kg", "tonne", "nr", "percent", "W/m2K", null] },
+        "count": { "type": ["integer", "null"], "minimum": 0 },
+
+        "spec": {
+          "type": "object",
+          "description": "Free-form but conventional keys: grade, cover_mm, thickness_mm, bar_dia_mm, block_type, u_value, glazing.",
+          "additionalProperties": true
+        },
+
+        "method": {
+          "enum": ["extracted", "derived", "assumed", "unavailable"],
+          "description": "extracted = read from the document. derived = computed from extracted items. assumed = a configured assumption, must appear on the Assumptions sheet. unavailable = genuinely not in the issued documents (e.g. PT design by specialist)."
+        },
+        "null_reason": {
+          "type": ["string", "null"],
+          "description": "Required whenever quantity is null. e.g. 'PT design by specialist - not in issued drawings'."
+        },
+        "formula": {
+          "type": ["string", "null"],
+          "description": "Human-readable derivation, e.g. 'count 12 x 1.8 x 1.8 x 0.40'. Required when method is derived."
+        },
+        "derived_from": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ids of the items this was computed from."
+        },
+        "assumption_ref": {
+          "type": ["string", "null"],
+          "description": "Key in config/factors.yaml. Required when method is assumed."
+        },
+
+        "source": { "$ref": "#/$defs/source" },
+        "additional_sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "flags": {
+          "type": "array",
+          "items": {
+            "enum": ["cross-check-mismatch", "derived", "approximate", "low-confidence",
+                     "schedule-conflict", "rate-required", "spreadsheet-error",
+                     "size-from-other-set", "vision-extracted", "handwritten-source"]
+          }
+        },
+        "cross_checks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "check_ids of cross-checks that reference this item."
+        },
+
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": { "enum": ["unreviewed", "approved", "corrected", "rejected"] },
+            "by": { "type": ["string", "null"] },
+            "at": { "type": ["string", "null"], "format": "date-time" },
+            "original_value": { "type": ["number", "null"] },
+            "comment": { "type": ["string", "null"] }
+          }
+        },
+
+        "notes": { "type": "string" }
+      },
+
+      "allOf": [
+        {
+          "if": { "properties": { "quantity": { "type": "null" } }, "required": ["quantity"] },
+          "then": {
+            "required": ["null_reason"],
+            "properties": { "null_reason": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "if": { "properties": { "method": { "const": "derived" } }, "required": ["method"] },
+          "then": {
+            "required": ["formula"],
+            "properties": { "formula": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "if": { "properties": { "method": { "const": "assumed" } }, "required": ["method"] },
+          "then": {
+            "required": ["assumption_ref"],
+            "properties": { "assumption_ref": { "type": "string", "minLength": 1 } }
+          }
+        }
+      ]
+    },
+
+    "cross_check": {
+      "type": "object",
+      "required": ["check_id", "description", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "check_id": { "type": "string", "description": "e.g. 'window_count_setA_vs_setC'" },
+        "description": { "type": "string" },
+        "status": { "enum": ["pass", "fail", "reconciled", "not_applicable", "not_possible"] },
+        "left": { "type": ["number", "string", "null"] },
+        "right": { "type": ["number", "string", "null"] },
+        "tolerance": { "type": ["number", "null"] },
+        "deviation_pct": { "type": ["number", "null"] },
+        "detail": { "type": "string", "description": "For reconciled: why the difference is explained." },
+        "item_ids": { "type": "array", "items": { "type": "string" } },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+        "blocking": {
+          "type": "boolean",
+          "description": "If true, export is blocked until an engineer approves or corrects.",
+          "default": false
+        }
+      }
+    }
+  }
+}
