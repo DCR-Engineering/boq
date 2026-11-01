@@ -192,11 +192,22 @@ Every arithmetic relation in this table closes exactly, which makes it an ideal 
 * `170.8 + 170.8 + 65.3 = 406.9` ✅
 * `132.5 + 154.6 + 49.1 = 336.2` ✅
 * `35.4 + 41.3 + 13.1 = 89.8` ✅
-* Each percentage is that floor's net buildable ÷ plot area (e.g. `132.5 / 373.6 = 35.5 %`) ✅
+* Each percentage is that floor's net buildable ÷ plot area, **truncated** to 1 dp ✅
 
-Note the office sums the **rounded** percentages: `336.2 / 373.6 = 90.0 %`, but the table states
-89.8 %. The checker must compare against the sum of rounded components, not recompute from the
-totals, or it will raise a false positive.
+**Correction (established while implementing the checker):** an earlier draft of this document
+said the office *rounds* these percentages. It does not — it **truncates**, and the total is the
+sum of the truncated values:
+
+| Floor | net ÷ plot | rounded | truncated | printed |
+|---|---|---|---|---|
+| Ground | 35.4657 % | 35.5 ✗ | **35.4** | 35.4 |
+| First | 41.3812 % | 41.4 ✗ | **41.3** | 41.3 |
+| Roof deck | 13.1424 % | 13.1 | **13.1** | 13.1 |
+| Total | 89.9893 % | 90.0 ✗ | sum = **89.8** | 89.8 |
+
+Rounding is wrong on two of the three floors, and recomputing the total directly is wrong too.
+A checker that rounds raises three false cross-check failures on a perfectly consistent sheet.
+This convention is recorded in `config/factors.yaml` and locked by a regression test.
 
 ### 5.2 Door and window schedules (pages 13–14) — partially extractable
 

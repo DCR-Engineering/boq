@@ -1,0 +1,27 @@
+# Rate library -- BHD, 3 decimal places.
+#
+# Guardrail (build prompt section 6): prices are NEVER invented by the model. An item with no
+# rate here appears in the BoQ with its quantity and a blank rate flagged "rate required".
+#
+# This file is intentionally EMPTY of rates. The office has not supplied a rate library yet.
+# Populating it with plausible-looking numbers would be exactly the failure mode the
+# guardrails exist to prevent.
+
+version: "0.0.0"
+currency: BHD
+decimals: 3
+sourced_from: null        # supplier quotation reference / date
+effective_date: null
+
+items: []
+# Shape each entry must take once real rates arrive:
+#
+# items:
+#   - code: CONC.C35
+#     description: "Ready-mix concrete grade C35, supply and place"
+#     unit: m3
+#     material_only:   { low: null, expected: null, high: null }
+#     supply_and_fix:  { low: null, expected: null, high: null }
+#     supplier: ""
+#     quoted_on: ""      # ISO date
+#     source_note: ""

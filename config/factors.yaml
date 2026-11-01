@@ -1,0 +1,52 @@
+# Configurable factors.
+#
+# Guardrail (build prompt section 5): wastage and lap allowances are applied at REPORTING time
+# only. They are never baked into an extracted quantity. Deterministic arithmetic lives in
+# plain code, never in a model call.
+
+version: "0.1.0"
+
+wastage:
+  concrete: 0.05        # 5 %
+  rebar: 0.08           # 8 %, laps + wastage
+  blockwork: 0.05       # 5 %
+
+# Standard BS 4449 / BS 8110 deformed bar unit masses, kg per metre.
+rebar_unit_mass_kg_per_m:
+  8: 0.395
+  10: 0.617
+  12: 0.888
+  16: 1.579
+  20: 2.466
+  25: 3.854
+  32: 6.313
+
+blocks_per_m2:
+  # AWAITING THE OFFICE'S FIGURES -- see docs/template-analysis.md section 12, question 4.
+  # Left null deliberately. A null here makes the blockwork extractor emit a null quantity
+  # with a reason, which is correct behaviour. No default will be invented.
+  thermal_200mm: null
+  solid_200mm: null
+  solid_150mm: null
+  solid_100mm: null
+
+formwork:
+  # Contact area excludes faces cast against earth or blinding.
+  exclude_faces_against_earth: true
+  exclude_faces_against_blinding: true
+
+storey_heights_m:
+  # Set B does not state storey heights; these come from the thermal workbook (Set C,
+  # sheets 'wall' / 'Main'). Items derived from them must record that source.
+  source: "Set C - THERMAL_DCR2564.xlsx, sheet 'Main'"
+  ground: 4.48
+  first: 4.16
+  roof: 3.20
+
+conventions:
+  # Established from DCR2564: the office truncates percentages to 1 dp and sums the truncated
+  # values, rather than rounding or recomputing from totals. See area_schedule.check().
+  percentage_rounding: truncate
+  percentage_decimals: 1
+  currency: BHD
+  currency_decimals: 3
