@@ -28,8 +28,8 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | Area schedule (Set A, N04) | ✅ validated against the real sheet |
 | Thermal workbook (Set C) | ✅ validated against real captured cell data |
 | Cross-check engine | ✅ 7 checks, validated on the real sample |
-| Footing schedule (Set B, ST-02) | ⛔ blocked — needs `STR2564.pdf` |
-| Column schedule (Set B, ST-02) | ⛔ blocked — needs `STR2564.pdf` |
+| Footing schedule (Set B, ST-02) | ✅ validated against the real sheet |
+| Column schedule (Set B, ST-02) | ✅ validated against the real sheet |
 | Door & window schedules (Set A, A09/A10) | ⛔ blocked — needs `DCR2564_FINAL_DRAWINGS.pdf` |
 | Bar bending schedule | ⚪ not applicable — Set B contains no BBS |
 
@@ -43,11 +43,13 @@ the documents from a limit of this tool:
 | `needs-plan-geometry` | section scheduled, length only on the plan | 3 — strip footings, beams, ground slab |
 | `extractor-not-built` | readable schedule, parser blocked | 4 — columns, ground beams, steel, formwork |
 
-The three blocked extractors are positional parsers. The analysis session captured their
-*text* but not their per-word coordinates, and the source files are no longer available.
-Writing a positional parser against a guessed layout, then testing it on a fixture that
-invented those positions, would be circular — it would prove nothing about the real sheet.
-Re-supply the drawings and `tools/make_fixtures.py` generates the fixtures.
+The one remaining blocked extractor is a positional parser. The analysis session captured their
+*text* but not their per-word coordinates. Writing a positional parser against a guessed
+layout, then testing it on a fixture that invented those positions, would be circular — it
+would prove nothing about the real sheet. `STR2564.pdf` has since been recovered from Drive
+and its two schedules are done; `DCR2564_FINAL_DRAWINGS.pdf` is 9 MB, which exceeds what the
+Drive connector can return in one response, so the door and window schedules still wait on
+a direct upload.
 
 Per the build prompt, work stops at the end of each phase for review.
 

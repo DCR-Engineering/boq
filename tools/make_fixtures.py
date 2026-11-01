@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import re
 import sys
 from pathlib import Path
 
@@ -38,12 +39,18 @@ REDACT_TOKENS = {
     "s.abbas",
     "iconeng.bh@gmail.com",
 }
-REDACT_SUBSTRINGS = ("@", "+973", "epp/bn")
+REDACT_SUBSTRINGS = ("+973", "epp/bn")
+
+# An email address, not merely an "@". A bare "@" rule silently destroys every reinforcement
+# callout on a structural sheet -- "T16@150" is spacing, not a mailbox.
+EMAIL = re.compile(r"[^\s@]+@[^\s@]+\.[^\s@]+")
 
 
 def is_redacted(word: Word) -> bool:
     low = word.text.lower()
-    return low in REDACT_TOKENS or any(s in low for s in REDACT_SUBSTRINGS)
+    if low in REDACT_TOKENS or any(s in low for s in REDACT_SUBSTRINGS):
+        return True
+    return bool(EMAIL.search(low))
 
 
 def main() -> int:

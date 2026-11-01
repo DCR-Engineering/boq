@@ -30,22 +30,38 @@ class Word:
         return None if self.x1 is None else self.x1 - self.x
 
 
-def words_from_pdf(path: str | Path, page_index: int) -> list[Word]:
+def words_from_pdf(path: str | Path, page_index: int, *, apply_rotation: bool = True) -> list[Word]:
     """Extract positioned words from one page. ``page_index`` is 0-based.
+
+    **Rotation matters.** Several sheets in the structural set are plotted with ``/Rotate 270``
+    (ST-02 among them). PyMuPDF reports word coordinates in *unrotated* page space, so on
+    those sheets a visual row arrives as a column and the title block lands on the left edge.
+    By default the page's rotation matrix is applied, putting every word where it appears on
+    the rendered page -- which is also what a stored ``bbox`` must mean for an engineer
+    checking the citation.
+
+    Pass ``apply_rotation=False`` for raw PDF-space coordinates.
 
     Deliberately thin: all logic lives in rows.py / viewport.py so it can be tested against
     stored fixtures without carrying client drawings in the repository.
     """
-    import fitz  # imported lazily so fixture-based tests do not require PyMuPDF
+    import pymupdf
 
-    with fitz.open(path) as doc:
+    with pymupdf.open(path) as doc:
         if not 0 <= page_index < len(doc):
             raise IndexError(f"page_index {page_index} out of range for {path} ({len(doc)} pages)")
         page = doc[page_index]
-        return [
-            Word(x=x0, y=y0, text=text, x1=x1, y1=y1)
-            for x0, y0, x1, y1, text, *_ in page.get_text("words")
-        ]
+        raw = page.get_text("words")
+
+        if not apply_rotation or not page.rotation:
+            return [Word(x=x0, y=y0, text=t, x1=x1, y1=y1) for x0, y0, x1, y1, t, *_ in raw]
+
+        matrix = page.rotation_matrix
+        out: list[Word] = []
+        for x0, y0, x1, y1, text, *_ in raw:
+            box = pymupdf.Rect(x0, y0, x1, y1) * matrix
+            out.append(Word(x=box.x0, y=box.y0, text=text, x1=box.x1, y1=box.y1))
+        return out
 
 
 def load_words(path: str | Path) -> list[Word]:

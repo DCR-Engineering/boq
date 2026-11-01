@@ -72,7 +72,10 @@ right of / below it within the title‑block strip. Do **not** rely on PDF readi
 ### 2.1 Sheet numbers
 
 * **Set B:** the sheet number is in the text layer as `ST - 00` … `ST - 12` and extracts cleanly on
-  all 16 pages.
+  all 16 pages. Note that **several Set B sheets are plotted with `/Rotate 270`**, ST-02 among
+  them. PyMuPDF returns word coordinates in unrotated page space, so without applying the page
+  rotation matrix a visual row arrives as a column and the title block appears on the left edge.
+  `words_from_pdf` applies it by default, so a stored `bbox` means what an engineer sees.
 * **Set A:** the sheet number is **not in the text layer at all**. Only the sheet *title* extracts.
   Page → sheet mapping for Set A must therefore come from the sheet title plus the index table on
   sheet A01 (or from the DWF manifest, §9).
@@ -275,15 +278,30 @@ Machine‑readable and directly relevant to blockwork and thermal take‑off:
 
 | Mark | b (mm) | d (mm) | Vertical bars | Links @ support | Links @ midspan |
 |---|---|---|---|---|---|
-| C1 | 200 | 600 | 12 Y16 | 2T8 @ 100 c/c | 2T8 @ 150 c/c |
+| BC | 200 | 300 | 6 Y12 | T8 @ 200 c/c | T8 @ 200 c/c |
+| C1 | 200 | 400 | 6 Y16 | T8 @ 100 c/c | T8 @ 200 c/c |
 | C2 | 200 | 500 | 8 Y16 | 2T8 @ 100 c/c | 2T8 @ 200 c/c |
-| C3 | 200 | 300 | 6 Y12 | T8 @ 200 c/c | T8 @ 200 c/c |
+| C3 | 200 | 600 | 12 Y16 | 2T8 @ 100 c/c | 2T8 @ 150 c/c |
 | C4 | 300 | 600 | 16 Y20 | 2T10 @ 100 c/c | 2T10 @ 150 c/c |
-| BC | 200 | 400 | 6 Y16 | T8 @ 200 c/c | T8 @ 200 c/c |
 
 ⚠ In document order this schedule is emitted as three disconnected runs — all the bar callouts,
 then all the marks, then all the dimensions. It is **only** reconstructable positionally. This is
 the sharpest example of why §4 matters.
+
+**Correction.** The table above was rewritten after the extractor was built against the real
+sheet. The first draft of this document, written before per-word coordinates were available,
+assigned **C1, C3 and BC to each other's sections** — it listed C1 as 200×600/12 Y16 (that is
+C3), C3 as 200×300/6 Y12 (that is BC), and BC as 200×400/6 Y16 (that is C1). The reading-order
+text gives no reliable mark-to-value association, and the inference drawn from it was wrong.
+
+The error mattered. With the plan counts in §6.6, pricing C1 as 200×600 overstates each C1 by
+50 %, and C3 as 200×300 understates each C3 by 50 %. Overall column cross-section is only about
+4 % out, because the errors partly offset — but columns are ordered and priced *per type*, so
+the per-type figures are what a supplier quotes against.
+
+The values above are now produced by `extract/structural/column_schedule.py` and pinned by
+exact-value tests. A sixth row — the ground slab schedule `GS-1`, which sits immediately to the
+right of C4 — is correctly excluded; an unbounded outer column band absorbed it at first.
 
 ### 6.2 Footing schedule (ST‑02, repeated on ST‑05)
 
