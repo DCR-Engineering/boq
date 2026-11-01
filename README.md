@@ -16,7 +16,8 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | **Phase 0** — repo scaffold | ✅ this commit |
 | **Phase 1** — ingest + classify | ⬜ not started |
 | **Phase 2** — table extractors | 🟡 partial — see below |
-| Phases 3–8 | ⬜ not started |
+| **Phase 3** — derived quantities + schema | ✅ engine, schema v1.1.0, wastage at reporting time |
+| Phases 4–8 | ⬜ not started |
 
 ### Phase 2 detail
 
@@ -29,6 +30,16 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | Column schedule (Set B, ST-02) | ⛔ blocked — needs `STR2564.pdf` |
 | Door & window schedules (Set A, A09/A10) | ⛔ blocked — needs `DCR2564_FINAL_DRAWINGS.pdf` |
 | Bar bending schedule | ⚪ not applicable — Set B contains no BBS |
+
+Phase 3 runs on whatever Phase 2 produces. On the sample it derives 32 quantities and
+emits 16 explicit nulls, each with a reason and one of three codes that separate a limit of
+the documents from a limit of this tool:
+
+| Code | Meaning | On DCR2564 |
+|---|---|---|
+| `not-issued` | designed, but delegated | 5 — PT slabs, tendons, anchorages |
+| `needs-plan-geometry` | section scheduled, length only on the plan | 3 — strip footings, beams, ground slab |
+| `extractor-not-built` | readable schedule, parser blocked | 4 — columns, ground beams, steel, formwork |
 
 The three blocked extractors are positional parsers. The analysis session captured their
 *text* but not their per-word coordinates, and the source files are no longer available.

@@ -451,7 +451,29 @@ row carrying 0.8 × 1.5 is labelled `W14`, and so on, ending with `D6` appearing
 labelling defect, not a quantity error. But it means the `window` sheet **cannot** be used to map
 glass area back to a window mark. **Read openings from `Main`, never from `window`.**
 
-### 7.5 Broken formulas
+### 7.5 The envelope decomposes exactly — and it settles the blockwork area
+
+Found while building the Phase 3 rules engine. The four envelope components sum to the
+declared total surface area with no residual at all:
+
+| Component | Source | Area (m²) |
+|---|---|---|
+| Glass | `DETAILS OF GLASS SELECTED` E11 | 146.930 |
+| Opaque external wall | `WALLS` G14 | 529.606 |
+| External columns | `COLUMNS` G14 | 98.400 |
+| External beams | `BEAM ` H14 | 39.880 |
+| **Sum** | | **814.816** |
+| **Declared total** | `DETAILS OF GLASS SELECTED` H11 | **814.816** |
+
+Exact to nine decimal places. This matters for more than tidiness: it proves the stated wall
+area of **529.606 m² is already net of openings, columns and beams**.
+
+That is the authoritative blockwork area. The obvious take-off move — start from the 814.816 m²
+gross envelope and deduct openings — would be wrong twice over: it would leave the columns and
+beams in, and if openings were deducted from the 529.606 m² figure as well, blockwork would be
+understated by 146.93 m², about **28 %**. This is now the `envelope_decomposition` cross-check.
+
+### 7.6 Broken formulas
 
 Sheet `CAL BEAMS` contains live `#REF!` errors in cells `E13`, `K13`, and in the totals row
 `E40` and `K40` ("Total Area of BEAM", front and right elevations). Any reader of this workbook
@@ -473,6 +495,7 @@ fail — which is exactly the point of building the panel:
 | 3 | Column count: schedule vs plan | ✅ 20 on both plans (§6.6) |
 | 4 | Glass area: declared vs recomputed from `Main` | ✅ 146.930 = 146.930 |
 | 5 | Wall area: `wall` sheet vs `DETAILS OF GLASS SELECTED` | ✅ 814.816 both |
+| 5a | **Envelope decomposition**: glass + wall + columns + beams = total surface | ✅ exact (§7.5) — establishes the net blockwork area |
 | 6 | Window **count**: Set A schedule vs Set C | ❌ **fails** — 22 vs 24, but see the correction below: **six marks disagree**, not two |
 | 7 | Window **marks**: Set A vs Set C | ⚠ Set A has no W04/W11/W12; Set C has no W4/W11/W12 either — consistent gap, but Set C adds A/B suffixes |
 | 8 | Glazed doors: Set A vs Set C | ✅ Set C counts only glazed leaves (D1, D2, D3, D6, SD1) — consistent with Set A's descriptions |
