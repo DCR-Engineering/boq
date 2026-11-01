@@ -15,8 +15,26 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | Template analysis | ✅ [`docs/template-analysis.md`](docs/template-analysis.md) |
 | **Phase 0** — repo scaffold | ✅ this commit |
 | **Phase 1** — ingest + classify | ⬜ not started |
-| **Phase 2** — table extractors | 🟡 area schedule done, as proof of the positional reader |
+| **Phase 2** — table extractors | 🟡 partial — see below |
 | Phases 3–8 | ⬜ not started |
+
+### Phase 2 detail
+
+| Extractor | State |
+|---|---|
+| Area schedule (Set A, N04) | ✅ validated against the real sheet |
+| Thermal workbook (Set C) | ✅ validated against real captured cell data |
+| Cross-check engine | ✅ 7 checks, validated on the real sample |
+| Footing schedule (Set B, ST-02) | ⛔ blocked — needs `STR2564.pdf` |
+| Column schedule (Set B, ST-02) | ⛔ blocked — needs `STR2564.pdf` |
+| Door & window schedules (Set A, A09/A10) | ⛔ blocked — needs `DCR2564_FINAL_DRAWINGS.pdf` |
+| Bar bending schedule | ⚪ not applicable — Set B contains no BBS |
+
+The three blocked extractors are positional parsers. The analysis session captured their
+*text* but not their per-word coordinates, and the source files are no longer available.
+Writing a positional parser against a guessed layout, then testing it on a fixture that
+invented those positions, would be circular — it would prove nothing about the real sheet.
+Re-supply the drawings and `tools/make_fixtures.py` generates the fixtures.
 
 Per the build prompt, work stops at the end of each phase for review.
 

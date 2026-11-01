@@ -473,7 +473,7 @@ fail — which is exactly the point of building the panel:
 | 3 | Column count: schedule vs plan | ✅ 20 on both plans (§6.6) |
 | 4 | Glass area: declared vs recomputed from `Main` | ✅ 146.930 = 146.930 |
 | 5 | Wall area: `wall` sheet vs `DETAILS OF GLASS SELECTED` | ✅ 814.816 both |
-| 6 | Window **count**: Set A schedule vs Set C | ⚠ 22 vs 24 — reconcilable: Set C splits W08→W8A/W8B and W09→W9A/W9B (+2). Should reconcile, not just flag |
+| 6 | Window **count**: Set A schedule vs Set C | ❌ **fails** — 22 vs 24, but see the correction below: **six marks disagree**, not two |
 | 7 | Window **marks**: Set A vs Set C | ⚠ Set A has no W04/W11/W12; Set C has no W4/W11/W12 either — consistent gap, but Set C adds A/B suffixes |
 | 8 | Glazed doors: Set A vs Set C | ✅ Set C counts only glazed leaves (D1, D2, D3, D6, SD1) — consistent with Set A's descriptions |
 | 9 | Built‑up area vs sum of slab areas | ❌ not possible — PT slabs by specialist, no slab areas issued |
@@ -486,6 +486,42 @@ fail — which is exactly the point of building the panel:
 
 Checks 11–15 are all real defects in the issued documents. A tool that surfaces these at
 take‑off time is worth having independently of the quantities.
+
+### 8.1 Correction — the window counts do not reconcile
+
+An earlier draft of this document recorded check 6 as *reconcilable*: Set A totals 22 window
+units, Set C totals 24, and Set C splits `W08` into `W8A`/`W8B` and `W09` into `W9A`/`W9B`,
+which appeared to account for the difference of two.
+
+**That was wrong, and it was wrong in the most dangerous way — it looked right at the total.**
+Comparing mark by mark, with padding normalised (`W01` ≡ `W1`) and split leaves folded back
+onto their base mark:
+
+| Mark | Set A | Set C | |
+|---|---|---|---|
+| W1 | 2 | 1 | ❌ |
+| W2 | 3 | 3 | ✅ |
+| W3 | 2 | 2 | ✅ |
+| W5 | 1 | 1 | ✅ |
+| W6 | 2 | 2 | ✅ |
+| W7 | 1 | 1 | ✅ |
+| W8 | 1 | 2 | ❌ |
+| W9 | 1 | 2 | ❌ |
+| W10 | 2 | 2 | ✅ |
+| W13 | 1 | 2 | ❌ |
+| W14 | 1 | 1 | ✅ |
+| W15 | 1 | 1 | ✅ |
+| W16 | 2 | 3 | ❌ |
+| W17 | 2 | 1 | ❌ |
+| **Total** | **22** | **24** | |
+
+**Six of fourteen marks disagree.** The totals differ by only two because the errors partly
+cancel: W1 −1 and W17 −1 offset W13 +1 and W16 +1, leaving the W8 and W9 splits as the visible
+net. The two sets genuinely disagree about how many of six window types the villa has, which
+matters for both the glazing cost and the window order.
+
+The lesson is now a design rule in `crosscheck/checks.py`: **compare item by item, never by
+total.** A totals-only comparison reports this as reconciled and hides all six.
 
 ---
 
