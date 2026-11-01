@@ -17,7 +17,9 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | **Phase 1** — ingest + classify | ⬜ not started |
 | **Phase 2** — table extractors | 🟡 partial — see below |
 | **Phase 3** — derived quantities + schema | ✅ engine, schema v1.1.0, wastage at reporting time |
-| Phases 4–8 | ⬜ not started |
+| **Phase 4** — thermal set + cross-checks | ✅ delivered within Phases 2–3 |
+| **Phase 5** — rate library + BoQ writer | 🟡 xlsx done; PDF pending (needs letterhead + Arabic font) |
+| Phases 6–8 | ⬜ not started |
 
 ### Phase 2 detail
 

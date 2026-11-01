@@ -14,6 +14,10 @@ sourced_from: null        # supplier quotation reference / date
 effective_date: null
 
 items: []
+
+# Maps quantity item ids to rate codes. Matching is by longest prefix, so a rule on
+# 'glaz.window' prices every window mark without an entry per mark. Populate alongside items.
+mapping: {}
 # Shape each entry must take once real rates arrive:
 #
 # items:
