@@ -2,13 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dcr.bh/schema/project_quantities.v1.json",
   "title": "Project Quantities v1",
-  "description": "Canonical contract between extraction and reporting. Every quantity is traceable to a source region or it is not emitted. v1.1.0 adds three unavailability reason flags (not-issued, needs-plan-geometry, extractor-not-built) which distinguish a limitation of the documents from a limitation of this tool.",
+  "description": "Canonical contract between extraction and reporting. Every quantity is traceable to a source region or it is not emitted. v1.1.0 adds three unavailability reason flags (not-issued, needs-plan-geometry, extractor-not-built) which distinguish a limitation of the documents from a limitation of this tool. v1.2.0 adds engineer-corrected and engineer-rejected, set when a reviewer overrides an extracted value.",
   "type": "object",
   "required": ["schema_version", "project", "extraction", "items"],
   "additionalProperties": false,
 
   "properties": {
-    "schema_version": { "const": "1.1.0" },
+    "schema_version": { "const": "1.2.0" },
 
     "project": {
       "type": "object",
@@ -207,7 +207,8 @@
             "enum": ["cross-check-mismatch", "derived", "approximate", "low-confidence",
                      "schedule-conflict", "rate-required", "spreadsheet-error",
                      "size-from-other-set", "vision-extracted", "handwritten-source",
-                     "not-issued", "needs-plan-geometry", "extractor-not-built"]
+                     "not-issued", "needs-plan-geometry", "extractor-not-built",
+                     "engineer-corrected", "engineer-rejected"]
           }
         },
         "cross_checks": {

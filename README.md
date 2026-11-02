@@ -19,7 +19,8 @@ traceable to a source region and must be reviewed by an engineer before it reach
 | **Phase 3** — derived quantities + schema | ✅ engine, schema v1.1.0, wastage at reporting time |
 | **Phase 4** — thermal set + cross-checks | ✅ delivered within Phases 2–3 |
 | **Phase 5** — rate library + BoQ writer | 🟡 xlsx done; PDF pending (needs letterhead + Arabic font) |
-| Phases 6–8 | ⬜ not started |
+| **Phase 6** — engineer review screen | ✅ local web UI, audit trail, export gate |
+| Phases 7–8 | ⬜ not started |
 
 ### Phase 2 detail
 
@@ -101,6 +102,28 @@ config/        factors.yaml (wastage, unit masses, conventions)
 rates/         rates.yaml — empty until the office supplies real rates
 tools/         make_fixtures.py
 ```
+
+## The review screen
+
+The mandatory gate between extraction and BoQ issue (build prompt section 7):
+
+```bash
+python tools/review.py --drawings /path/to/project/pdfs --reviewer "S.Abbas"
+# Review screen on http://127.0.0.1:8765
+```
+
+Extracted table on the left, the cited source page with its region highlighted on the right,
+items ordered lowest confidence first. Approve, correct or reject inline; every action is
+recorded in an append-only audit trail with who, when and from what to what. A correction
+becomes an `assumed` quantity and lands on the Assumptions sheet — an engineer-supplied number
+is an assumption, whatever produced the original.
+
+Nothing exports while a low-confidence item is unresolved or a blocking cross-check stands. A
+failing check can be accepted with a named reason; it keeps its failing status, but someone
+owns the decision.
+
+Built on the standard library's `http.server` — no web framework, so it runs on any machine
+with Python. Binds to localhost: it serves unreviewed client quantities and has no auth.
 
 ## Setup
 

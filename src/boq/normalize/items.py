@@ -14,7 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 SCHEMA_PATH = Path(__file__).resolve().parents[3] / "schema" / "project_quantities.v1.json"
 
 Method = Literal["extracted", "derived", "assumed", "unavailable"]
@@ -76,6 +76,7 @@ class QuantityItem:
     additional_sources: list[Source] = field(default_factory=list)
     flags: list[str] = field(default_factory=list)
     cross_checks: list[str] = field(default_factory=list)
+    review: dict[str, Any] | None = None
     notes: str = ""
 
     def __post_init__(self) -> None:
@@ -128,6 +129,8 @@ class QuantityItem:
             out["flags"] = list(self.flags)
         if self.cross_checks:
             out["cross_checks"] = list(self.cross_checks)
+        if self.review:
+            out["review"] = dict(self.review)
         if self.notes:
             out["notes"] = self.notes
         return out
